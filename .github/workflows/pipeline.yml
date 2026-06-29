@@ -6,6 +6,7 @@ on:
 
 env:
   IMAGE_NAME: mon-app
+  REGISTRY: ghcr.io/jihane12
 
 jobs:
   pipeline:
@@ -65,8 +66,10 @@ jobs:
 
       - name: "⑦ Push image"
         run: |
-          docker tag $IMAGE_NAME:${{ github.sha }} ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest
-          docker push ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest
+          docker tag $IMAGE_NAME:${{ github.sha }} $REGISTRY/$IMAGE_NAME:${{ github.sha }}
+          docker tag $IMAGE_NAME:${{ github.sha }} $REGISTRY/$IMAGE_NAME:latest
+          docker push $REGISTRY/$IMAGE_NAME:${{ github.sha }}
+          docker push $REGISTRY/$IMAGE_NAME:latest
 
       # Stage 8+9 - Smoke test local
       - name: "⑧⑨ Smoke Test"
