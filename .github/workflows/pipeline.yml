@@ -5,8 +5,8 @@ on:
     branches: [main]
 
 env:
+  ACR_REGISTRY: monprojetdevops.azurecr.io
   IMAGE_NAME: mon-app
-  REGISTRY: ghcr.io/jihane12
 
 jobs:
   pipeline:
@@ -14,20 +14,18 @@ jobs:
 
     steps:
       # Stage 1 - Checkout
-      - name: "① Checkout"
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - run: echo "SHA = ${{ github.sha }}"
 
       # Stage 2 - Lint
-      - name: "② Lint"
+      - name: Lint
         run: |
           pip install flake8
           flake8 app/ --max-line-length=100
 
       # Stage 3 - Build & Test
-      - name: "③ Build & Test"
+      - name: Build & Test
         run: |
           pip install -r requirements.txt
           pytest tests/ --cov=app --cov-report=xml
@@ -38,43 +36,60 @@ jobs:
           name: coverage
           path: coverage.xml
 
-      # Stage 4+5 - SonarCloud
-      - name: "④ SonarCloud Scan"
-        uses: SonarSource/sonarqube-scan-action@master
+      # Stage 4 - SonarQube
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
-      # Stage 6 - Trivy
-      - name: "⑤ Build image pour Trivy"
+      # Stage 5 - Quality Gate
+      - name: Quality Gate
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      # Stage 6 - Security Scan Trivy
+      - name: Build Docker image (pour Trivy)
         run: docker build -t $IMAGE_NAME:${{ github.sha }} .
 
-      - name: "⑥ Trivy Security Scan"
+      - name: Trivy Security Scan
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: "${{ env.IMAGE_NAME }}:${{ github.sha }}"
           format: table
           exit-code: 0
 
-      # Stage 7 - Push vers ghcr.io
-      - name: "⑦ Login ghcr.io"
-        uses: docker/login-action@v3
+      # Stage 7 - Push to ACR
+      - name: Login to ACR
+        uses: azure/docker-login@v1
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          login-server: ${{ env.ACR_REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
 
-      - name: "⑦ Push image"
+      - name: Push image
         run: |
-          docker tag $IMAGE_NAME:${{ github.sha }} $REGISTRY/$IMAGE_NAME:${{ github.sha }}
-          docker tag $IMAGE_NAME:${{ github.sha }} $REGISTRY/$IMAGE_NAME:latest
-          docker push $REGISTRY/$IMAGE_NAME:${{ github.sha }}
-          docker push $REGISTRY/$IMAGE_NAME:latest
+          docker tag $IMAGE_NAME:${{ github.sha }} $ACR_REGISTRY/$IMAGE_NAME:${{ github.sha }}
+          docker tag $IMAGE_NAME:${{ github.sha }} $ACR_REGISTRY/$IMAGE_NAME:latest
+          docker push $ACR_REGISTRY/$IMAGE_NAME:${{ github.sha }}
+          docker push $ACR_REGISTRY/$IMAGE_NAME:latest
 
-      # Stage 8+9 - Smoke test local
-      - name: "⑧⑨ Smoke Test"
+      # Stage 8 - IaC Apply (Terraform)
+      - name: Terraform Init & Apply
+        working-directory: infra/
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
         run: |
-          docker run -d -p 8000:8000 --name app-test $IMAGE_NAME:${{ github.sha }}
-          sleep 5
-          curl -f http://localhost:8000/health
-          docker stop app-test
+          terraform init
+          terraform apply -auto-approve
+
+      # Stage 9 - Smoke Test
+      - name: Smoke Test
+        run: |
+          APP_URL=$(cd infra && terraform output -raw app_url)
+          sleep 15
+          curl -f "$APP_URL/health"
