@@ -81,7 +81,7 @@ jobs:
       # Terraform apply a donc été exécuté manuellement en Azure Cloud Shell,
       # authentifié via `az login` (compte utilisateur), plutôt qu'un Service
       # Principal en CI/CD. Voir capture "terraform output" dans le rapport.
-      - name: "⑧ Terraform Info"
+      - name: "Terraform"
         run: |
           echo "Terraform apply exécuté manuellement depuis Azure Cloud Shell"
           echo "App URL: https://mon-app-staging-jihane.azurewebsites.net"
