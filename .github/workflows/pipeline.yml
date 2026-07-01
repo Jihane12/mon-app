@@ -1,9 +1,7 @@
 name: CI/CD Pipeline
-
 on:
   push:
     branches: [main]
-
 env:
   ACR_REGISTRY: monprojetdevops.azurecr.io
   IMAGE_NAME: mon-app
