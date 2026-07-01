@@ -91,9 +91,9 @@ jobs:
           echo "Région: Spain Central"
           echo "Resource Group: rg-staging"
 
-      # Stage 9 - Smoke Test
+     # Stage 9 - Smoke Test
       - name: Smoke Test
         run: |
-          APP_URL=$(cd infra && terraform output -raw app_url)
+          APP_URL="https://mon-app-staging-jihane.azurewebsites.net"
           sleep 15
           curl -f "$APP_URL/health"
