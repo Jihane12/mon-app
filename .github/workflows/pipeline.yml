@@ -76,7 +76,6 @@ jobs:
           docker push $ACR_REGISTRY/$IMAGE_NAME:latest
 
       # Stage 8 - IaC Apply (Terraform)
-      # Stage 8 - IaC Apply (manuel - Azure AD restreint sur tenant universitaire)
       - name: "⑧ Terraform Info"
         run: |
           echo "Terraform apply exécuté manuellement depuis Azure Cloud Shell"
