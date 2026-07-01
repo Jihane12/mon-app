@@ -76,24 +76,13 @@ jobs:
           docker push $ACR_REGISTRY/$IMAGE_NAME:latest
 
       # Stage 8 - IaC Apply (Terraform)
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-           terraform_version: "1.8.5"
-      - name: Terraform Init & Apply
-        working-directory: infra/
-        env:
-           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      # Stage 8 - IaC Apply (manuel - Azure AD restreint sur tenant universitaire)
+      - name: "⑧ Terraform Info"
         run: |
-           terraform init
-           terraform apply -auto-approve \
-                 -var="app_name=mon-app-staging-jihane" \
-                 -var="acr_registry=${{ env.ACR_REGISTRY }}" \
-                 -var="acr_username=${{ secrets.ACR_USERNAME }}" \
-                 -var="acr_password=${{ secrets.ACR_PASSWORD }}"
+          echo "Terraform apply exécuté manuellement depuis Azure Cloud Shell"
+          echo "App URL: https://mon-app-staging-jihane.azurewebsites.net"
+          echo "Région: Spain Central"
+          echo "Resource Group: rg-staging"
 
       # Stage 9 - Smoke Test
       - name: Smoke Test
