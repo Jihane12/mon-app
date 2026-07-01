@@ -18,3 +18,4 @@ pytest tests/ --cov=app --cov-report=xml
 - GET  /items/{id}   → retourne un item
 - POST /items?name=  → crée un item
 - GET  /metrics      → métriques Prometheus
+  
