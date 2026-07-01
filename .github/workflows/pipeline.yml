@@ -83,13 +83,17 @@ jobs:
       - name: Terraform Init & Apply
         working-directory: infra/
         env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
         run: |
-          terraform init
-          terraform apply -auto-approve
+           terraform init
+           terraform apply -auto-approve \
+                 -var="app_name=mon-app-staging-jihane" \
+                 -var="acr_registry=${{ env.ACR_REGISTRY }}" \
+                 -var="acr_username=${{ secrets.ACR_USERNAME }}" \
+                 -var="acr_password=${{ secrets.ACR_PASSWORD }}"
 
       # Stage 9 - Smoke Test
       - name: Smoke Test
