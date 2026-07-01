@@ -83,6 +83,13 @@ jobs:
           echo "App URL: https://mon-app-staging-jihane.azurewebsites.net"
           echo "Région: Spain Central"
           echo "Resource Group: rg-staging"
+      # Stage 8 - IaC Apply (manuel - Azure AD restreint sur tenant universitaire)
+      - name: "⑧ Terraform Info"
+        run: |
+          echo "Terraform apply exécuté manuellement depuis Azure Cloud Shell"
+          echo "App URL: https://mon-app-staging-jihane.azurewebsites.net"
+          echo "Région: Spain Central"
+          echo "Resource Group: rg-staging"
 
       # Stage 9 - Smoke Test
       - name: Smoke Test
